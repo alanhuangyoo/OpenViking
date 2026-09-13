@@ -835,7 +835,14 @@ BitmapPtr MustNotOp::calc_bitmap(FieldBitmapGroupSetPtr field_group_set_ptr,
   } else {
     // has pres
     if (on_res_op == "and") {
-      if (type_conds_.size() == 1) {
+      if (field_group_set_ptr->is_path_field_name(fields_[0])) {
+        // Exclude the whole subtree, as calc_self_bitmap does.
+        BitmapPtr temp = field_group_set_ptr->make_path_field_copy(
+            fields_[0], type_conds_, depth_);
+        if (temp) {
+          pres->Exclude(temp.get());
+        }
+      } else if (type_conds_.size() == 1) {
         const Bitmap* temp_p =
             field_group_set_ptr->get_bitmap(fields_[0], type_conds_[0]);
         if (temp_p) {
